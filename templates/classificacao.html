@@ -1,0 +1,58 @@
+{% extends "template.html" %}
+{% block conteudo %}
+
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Classificação de Imagens de LV Humana</h5>
+
+              <!-- Imagem de predição -->
+              <div class="row justify-content-center">
+                <div class="col-lg-4">
+                  <figure class="figure">
+                    <img src="{{ imagem_upload }}" class="d-block w-100" id="image">
+                    <figcaption class="figure-caption text-center" style="font-size: 18px; font-weight: 500; color: #012970; font-family: 'Poppins', sans-serif">
+                      {{predict}}
+                    </figcaption>
+                  </figure>
+                </div>
+              </div>
+
+              <br><br>
+
+              <!-- Horizontal Form -->
+              <form action="/predict" method="POST" enctype="multipart/form-data">
+                <div class="row mb-3">
+                  <label for="formFile" class="col-sm-2 col-form-label">Selecione uma imagem</label>
+                  <div class="col-sm-10">
+                    <input type="file" name="arquivo" class="form-control" id="formFile" accept="image/*" required>
+                  </div>
+                </div>
+
+                <div class="text-center">
+                  <button type="submit" class="btn btn-primary">Enviar</button>
+                  <button type="reset" class="btn btn-secondary">Limpar</button>
+                </div>
+              </form><!-- End Horizontal Form -->
+
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <script type="text/javascript">
+      formFile.onchange = evt => {
+        const [file] = formFile.files
+        if (file) {
+          image.src = URL.createObjectURL(file)
+        }
+      }
+    </script>
+
+{% endblock %}
