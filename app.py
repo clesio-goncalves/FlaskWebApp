@@ -11,13 +11,25 @@ from tensorflow.keras.models import model_from_json
 app = Flask(__name__)
 
 #################################################################
-json_path = 'models/inception_resnet_v2.json'
-model_path = 'models/inception_resnet_v2.h5'
-model = ""
+json_path = 'models/inception_v3.json'
+model_path = 'models/inception_v3.h5'
+
 classe = ""
 arquivo_path = "../static/img/placeholder.jpg"
+
 img_altura = 299
 img_largura = 299
+
+# Lendo o modelo do arquivo JSON
+with open(json_path, 'r') as json_file:
+    json_modelo_salvo = json_file.read()
+
+# leitura do modelo
+model = model_from_json(json_modelo_salvo)
+
+# leitura dos pesos
+model.load_weights(model_path)
+# print(model.summary())
 #################################################################
 
 @app.route('/')
@@ -31,20 +43,7 @@ def home():
 @app.route('/classificacao.html')
 def classificacao():
 
-    global classe, model
-
-    #################################################################
-    # Lendo o modelo do arquivo JSON
-    with open(json_path, 'r') as json_file:
-        json_modelo_salvo = json_file.read()
-
-    # leitura do modelo
-    model = model_from_json(json_modelo_salvo)
-
-    # leitura dos pesos
-    model.load_weights(model_path)
-    # print(model.summary())
-    #################################################################
+    global classe
 
     return render_template('classificacao.html', pagina="Classificação", predict=classe, imagem_upload=arquivo_path)
 
@@ -72,12 +71,12 @@ def predict():
         arquivo.save(arquivo_path)
         img = ler_imagem(arquivo_path) #pré-processamento
         prediction = model.predict(img) #predição
-        print(prediction)
+        temp = prediction
         prediction = (prediction > 0.5).astype(np.uint8)
         if prediction[[0]] == 1:
-            classe = "Classe: Positiva"
+            classe = f"Classe: Positiva ({round(temp[0][0]*100,2)}%)"
         else:
-            classe = "Classe: Negativa"
+            classe = f"Classe: Negativa ({round((1-temp[0][0])*100,2)}%)"
 
     return redirect("/classificacao.html")
 
