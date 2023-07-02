@@ -59,11 +59,24 @@
                       <span class="visually-hidden">Próxima</span>
                     </button>
 
-                  </div>
+                  </div> <!-- End Slides with indicators -->
                 </div>
-              </div><!-- End Slides with indicators -->
+              </div>
 
               <br><br>
+
+              <!-- Mensagem quando remove imagens -->
+              <div class="row justify-content-center" id="mensagem">
+              {% if img_removidas > 0: %}
+                <div class="col-lg-7">
+                  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>{{img_removidas}}</strong> imagem(ns) foi(foram) removida(s) da predição, pois não é(são) imagem(ens) microscópica(s).
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                </div>
+                <br><br>
+              {% endif %}
+              </div>
 
               <!-- Horizontal Form -->
               <form action="/predict" method="POST" enctype="multipart/form-data">
@@ -95,6 +108,8 @@
         var qnt = saida.files.length;
         document.getElementById("botoes").innerHTML = "";
         document.getElementById("galeria").innerHTML = "";
+        document.getElementById("mensagem").innerHTML = "";
+
         for(i = 0; i < qnt; i++){
             var urls = URL.createObjectURL(event.target.files[i]);
             var slide = i + 1;
@@ -112,6 +127,7 @@
       function resetImagens(event){
         document.getElementById("botoes").innerHTML = "";
         document.getElementById("galeria").innerHTML = "";
+        document.getElementById("mensagem").innerHTML = "";
 
         document.getElementById("botoes").innerHTML += '<button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1">';
         document.getElementById("galeria").innerHTML += '<div class="carousel-item active"><img src="../static/img/placeholder.jpg" class="d-block w-100"></div>';
