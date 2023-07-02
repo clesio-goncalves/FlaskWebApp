@@ -67,15 +67,23 @@
 
               <!-- Mensagem quando remove imagens -->
               <div class="row justify-content-center" id="mensagem">
-              {% if img_removidas > 0: %}
                 <div class="col-lg-7">
-                  <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong>{{img_removidas}}</strong> imagem(ns) foi(foram) removida(s) da predição, pois não é(são) imagem(ens) microscópica(s).
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
+                  {% if img_removidas > 0: %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                      <strong>{{img_removidas}}</strong> imagem(ns) foi(foram) removida(s) da predição, pois não é(são) imagem(ens) microscópica(s).
+                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <br><br>
+                  {% endif %}
+
+                  {% if img_invalidas > 0: %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                      <strong>{{img_invalidas}}</strong> imagem(ns) com extensão inválida. Extensões permitidas: 'jpg', 'jpeg', 'png' e 'tif'.
+                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <br><br>
+                  {% endif %}
                 </div>
-                <br><br>
-              {% endif %}
               </div>
 
               <!-- Horizontal Form -->

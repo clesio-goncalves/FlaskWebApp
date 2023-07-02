@@ -17,6 +17,7 @@ json_path = 'models/inception_v3.json'
 model_path = 'models/inception_v3.h5'
 
 classes = ""
+img_invalidas = 0
 img_removidas = 0
 filenames = ["../static/img/placeholder.jpg"]
 
@@ -50,9 +51,9 @@ def home():
 @app.route('/classificacao.html')
 def classificacao():
 
-    global classes, filenames
+    global classes, filenames, img_removidas, img_invalidas
 
-    return render_template('classificacao.html', pagina="Classificação", predict=classes, img_removidas=img_removidas, len_filenames=len(filenames), filenames=zip(filenames, range(0, len(filenames))))
+    return render_template('classificacao.html', pagina="Classificação", predict=classes, img_removidas=img_removidas, img_invalidas=img_invalidas, len_filenames=len(filenames), filenames=zip(filenames, range(0, len(filenames))))
 
 def ler_imagem():
     global filenames
@@ -68,9 +69,9 @@ def ler_imagem():
     return imagens
 
 #Entensões permitidas png, jpg e jpeg
-EXTENSOES = set(['jpg' , 'jpeg' , 'png', 'tif'])
+EXTENSOES = set(['jpg', 'jpeg', 'png', 'tif'])
 def formatos_permitidos(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1] in EXTENSOES
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in EXTENSOES
 
 # Extrai características com o GLCM
 def calculate_glcm_features(image):
@@ -112,16 +113,21 @@ def verifica_imagem_upload():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    global classes, filenames, model
+    global classes, filenames, model, img_invalidas
+
     arquivos = request.files.getlist('arquivo')  # Obtem uma lista de arquivos enviados
 
     filenames = []
+    img_invalidas = 0
     for arquivo in arquivos:
         if arquivo and formatos_permitidos(arquivo.filename):  # Verifica o formato da imagem
             nome_arquivo = arquivo.filename
             arquivo_path = os.path.join('static/imagens', nome_arquivo)
             arquivo.save(arquivo_path)
             filenames.append(arquivo_path)
+        else:
+            img_invalidas += 1 # formato inválido
+
     print(filenames)
 
     # Verifica se a imagem é de microscopia, com base no calculo GLCM. Remove a imagem caso não seja de microscopia
