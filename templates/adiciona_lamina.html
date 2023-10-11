@@ -1,0 +1,74 @@
+{% extends "template.html" %}
+
+{% block pagina %}
+  <li class="breadcrumb-item active">{{ pagina }}</li>
+{% endblock %}
+
+{% block conteudo %}
+
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Classificação de Imagens de LV Humana</h5>
+
+                <form action="/add_lamina" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <div class="row mb-3 position-relative">
+                      <label for="validationTooltip03" class="col-sm-2 col-form-label">Nome Lâmina</label>
+                      <div class="col-sm-10">
+                        <input type="text" class="form-control" name="nome_lamina" id="validationTooltip03" required="required" pattern="[A-Za-z0-9_]+">
+                        <div class="invalid-tooltip">
+                            Utilize apenas letras, números e o separador underline (_).
+                        </div>
+                      </div>
+
+                    </div>
+                    <br><br>
+                    <div class="text-center">
+                      <button type="submit" class="btn btn-primary">Adicionar</button>
+                      <button type="reset" class="btn btn-secondary">Limpar</button>
+                    </div>
+                </form>
+
+                <!-- Basic Modal -->
+                <div class="modal fade" id="myModal" tabindex="-1">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Lâmina existente</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          Há uma lâmina cadastrada com esse mesmo nome. Deseja adicionar novas imagens a essa lâmina já cadastrada?
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
+                          <a href="classificacao.html" class="btn btn-primary">Sim</a>
+
+                        </div>
+                      </div>
+                    </div>
+                </div><!-- End Basic Modal-->
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+{% endblock %}
+
+{% block javascript %}
+
+{% if pasta_existente : %}
+    <script type="text/javascript">
+    var myModal = new bootstrap.Modal(document.getElementById("myModal"), {});
+    document.onreadystatechange = function () {
+      myModal.show();
+    };
+    </script>
+{% endif %}
+
+{% endblock %}

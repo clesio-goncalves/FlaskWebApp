@@ -1,0 +1,54 @@
+{% extends "template.html" %}
+
+{% block pagina %}
+  <li class="breadcrumb-item active">{{ pagina }}</li>
+{% endblock %}
+
+{% block conteudo %}
+
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Dataset de Imagens de LV Humana</h5>
+
+              <!-- Table with stripped rows -->
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Classe</th>
+                    <th scope="col">Data Atualização</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                  <!-- Percorre todas as lâminas -->
+                  {% for i, row in dataset.iterrows() %}
+                    <tr>
+                      <th scope="row">{{i+1}}</th>
+                      <td><a href="/dataset/{{row['nome_lamina']}}">{{row['nome_lamina']}}</a></td>
+                      <td>{{row['classe_predicao']}}</td>
+                      <td>{{row['data_atualizacao']}}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+              <!-- End Table with stripped rows -->
+
+              <br><br>
+              <div class="text-center">
+                  <a href="/adiciona_lamina" class="btn btn-warning">Nova Lâmina</a>
+                </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+{% endblock %}
