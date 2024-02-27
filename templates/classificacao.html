@@ -103,6 +103,7 @@
 
                 <div class="text-center">
                   <button type="submit" class="btn btn-primary">Enviar</button>
+                  <a href="/send_image" class="btn btn-success">Envio de imagem automático</a>
                   <button type="reset" class="btn btn-secondary" onclick="resetImagens(event)">Limpar</button>
                   <a href="/adiciona_lamina" class="btn btn-warning">Nova Lâmina</a>
                 </div>
@@ -136,7 +137,6 @@
 
         for(i = 0; i < qnt; i++){
             var urls = URL.createObjectURL(event.target.files[i]);
-            print(urls);
             var slide = i + 1;
             if (i != 0) {
               document.getElementById("botoes").innerHTML += '<button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="'+i+'" aria-label="Slide '+slide+'">';

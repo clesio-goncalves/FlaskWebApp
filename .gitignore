@@ -1,1 +1,23 @@
 static/imagens/
+static/.DS_Store
+venv
+.idea
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+.env
+
+#igone imgs
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.webp
+*.bmp
+*.tiff
+*.tif

@@ -1,4 +1,5 @@
 #################################################################
+from decouple import config
 from flask import Flask, render_template, redirect, request
 from datetime import datetime
 import os
@@ -14,29 +15,38 @@ from tensorflow.keras.models import model_from_json
 
 app = Flask(__name__)
 
+RESET_VARIABLES = config('RESET_VARIABLES', False, cast=bool)
+
 #################################################################
 json_path = 'models/inception_v3.json'
 model_path = 'models/inception_v3.h5'
 
 classes = []
 diretorio_base = "static/imagens/"
-pasta_lamina = ""
+pasta_lamina = "static/imagens/"
 pasta_existente = False
 houve_classificacao = False
 img_invalidas = 0
 img_removidas = 0
-df = pd.DataFrame(columns=['nome_imagem', 'classe_predicao', 'porcentagem_predicao'])
-filenames=[]
+df = pd.DataFrame(columns=["nome_imagem", "classe_predicao", "porcentagem_predicao"])
+filenames = []
 
-df_laminas = pd.DataFrame(columns=['nome_lamina', 'classe_predicao', 'data_atualizacao'])
-#df_laminas.to_csv(diretorio_base + "dataset.csv", index=False)
-df_laminas = pd.read_csv(diretorio_base + "dataset.csv")
+csv_path = diretorio_base + "dataset.csv"
+
+try:
+    df_laminas = pd.read_csv(csv_path)
+    if df_laminas.empty:
+        raise pd.errors.EmptyDataError("O arquivo CSV está vazio")
+except (FileNotFoundError, pd.errors.EmptyDataError):
+    colunas = ["nome_lamina", "classe_predicao", "data_atualizacao"]
+    df_laminas = pd.DataFrame(columns=colunas)
+    df_laminas.to_csv(csv_path, index=False)
 
 img_altura = 299
 img_largura = 299
 
 # Lendo o modelo do arquivo JSON
-with open(json_path, 'r') as json_file:
+with open(json_path, "r") as json_file:
     json_modelo_salvo = json_file.read()
 
 # leitura do modelo
@@ -48,10 +58,13 @@ model.load_weights(model_path)
 
 # Carrrega o modelo do RandomForest para classificação das features do GLCM
 # Carrega o modelo salvo a partir do arquivo
-loaded_model = joblib.load('models/random_forest_model.joblib')
+loaded_model = joblib.load("models/random_forest_model.joblib")
 #################################################################
 
 def resetar_variaveis():
+    if not RESET_VARIABLES:
+        return
+
     global classes, pasta_lamina, pasta_existente, img_invalidas, img_removidas, df, filenames
 
     classes = []
@@ -63,34 +76,44 @@ def resetar_variaveis():
     df = pd.DataFrame(columns=['nome_imagem', 'classe_predicao', 'porcentagem_predicao'])
     filenames = []
 
-@app.route('/')
+
+@app.route("/")
 def index():
-    return render_template('index.html', pagina="Dashboard")
+    return render_template("index.html", pagina="Dashboard")
 
-@app.route('/index.html')
+
+@app.route("/index.html")
 def home():
-    return redirect('/')
+    return redirect("/")
 
-@app.route('/dataset')
+
+@app.route("/dataset")
 def dataset():
-    return render_template('dataset.html', pagina="Dataset", dataset=df_laminas)
+    return render_template("dataset.html", pagina="Dataset", dataset=df_laminas)
 
-@app.route('/dataset/<lamina>')
+
+@app.route("/dataset/<lamina>")
 def dataset_imagens(lamina):
     global diretorio_base, df
 
     caminho_csv = f'{diretorio_base + lamina + "/" + lamina}.csv'
     df = pd.read_csv(caminho_csv)  # ler o CSV
 
-    return render_template('imagens_laminas.html', pagina="Dataset", lamina=lamina, dataset=df)
+    return render_template(
+        "imagens_laminas.html", pagina="Dataset", lamina=lamina, dataset=df
+    )
 
-@app.route('/adiciona_lamina.html')
+
+@app.route("/adiciona_lamina.html")
 def adiciona_lamina():
     global pasta_existente
 
-    return render_template('adiciona_lamina.html', pagina="Classificação", pasta_existente=pasta_existente)
+    return render_template(
+        "adiciona_lamina.html", pagina="Classificação", pasta_existente=pasta_existente
+    )
 
-@app.route('/adiciona_lamina')
+
+@app.route("/adiciona_lamina")
 def inicia_lamina():
     resetar_variaveis()
     return redirect("/adiciona_lamina.html")
@@ -99,9 +122,11 @@ def consulta_predicao_dataset(lamina):
     num_linhas = df_laminas.shape[0]
     predicao_existente = "Indefinida"
 
-    if(num_linhas>0):
+    if num_linhas > 0:
         # Verificando a predição com base no nome da lâmina
-        predicao_existente = df_laminas.loc[df_laminas['nome_lamina'] == lamina, 'classe_predicao'].values[0]
+        predicao_existente = df_laminas.loc[
+            df_laminas["nome_lamina"] == lamina, "classe_predicao"
+        ].values[0]
 
     return predicao_existente
 
@@ -135,18 +160,25 @@ def filtrar_dataframe():
     dez_maiores = None #inicializa variável
 
     # Selecionando as dez maiores porcentagens de predições
-    if (df_positivas.shape[0] > 0):
-        dez_maiores = df_positivas.sort_values(by='porcentagem_predicao', ascending=False).head(10)
+    if df_positivas.shape[0] > 0:
+        dez_maiores = df_positivas.sort_values(
+            by="porcentagem_predicao", ascending=False
+        ).head(10)
     else:
-        dez_maiores = df.sort_values(by='porcentagem_predicao', ascending=False).head(10)
+        dez_maiores = df.sort_values(by="porcentagem_predicao", ascending=False).head(
+            10
+        )
 
-    if (dez_maiores.shape[0] == 0):
+    if dez_maiores.shape[0] == 0:
         nova_linha = {
-            'nome_imagem': "../static/img/placeholder.jpg",
-            'classe_predicao': "",
-            'porcentagem_predicao': ""
+            "nome_imagem": "../static/img/placeholder.jpg",
+            "classe_predicao": "",
+            "porcentagem_predicao": "",
         }
-        dez_maiores = dez_maiores.append(nova_linha, ignore_index=True)
+        # dez_maiores = dez_maiores.append(nova_linha, ignore_index=True)
+        dez_maiores = pd.concat(
+            [dez_maiores, pd.DataFrame([nova_linha])], ignore_index=True
+        )
 
     return dez_maiores
 
@@ -165,9 +197,20 @@ def classificacao():
     lamina=pasta_lamina.split("/")[-1]
     predicao_existente = consulta_predicao_dataset(lamina)
 
-    return render_template('classificacao.html', pagina="Classificação", houve_classificacao=houve_classificacao, lamina=lamina, predicao_existente=predicao_existente, dataset=dez_maiores, num_linhas=num_linhas, img_removidas=img_removidas, img_invalidas=img_invalidas)
+    return render_template(
+        "classificacao.html",
+        pagina="Classificação",
+        houve_classificacao=houve_classificacao,
+        lamina=lamina,
+        predicao_existente=predicao_existente,
+        dataset=dez_maiores,
+        num_linhas=num_linhas,
+        img_removidas=img_removidas,
+        img_invalidas=img_invalidas,
+    )
 
-@app.route('/classificacao')
+
+@app.route("/classificacao")
 def inicia_classificacao():
     resetar_variaveis()
     return inicia_lamina()
@@ -255,13 +298,25 @@ def add_lamina():
         os.mkdir(pasta_lamina)  # cria a pasta
         df.to_csv(caminho_csv, index=False) # cria o CSV
 
-        # Adiciona uma linha no CSV de dataset
-        df_laminas = df_laminas.append({
-            'nome_lamina': nome_lamina.upper(),
-            'classe_predicao': "Indefinida", #lâmina não classificada
-            'data_atualizacao': datetime.now()
-        }, ignore_index=True)
-        df_laminas.to_csv(diretorio_base + "dataset.csv", index=False) # escreve em disco
+        df_laminas = pd.concat(
+            [
+                df_laminas,
+                pd.DataFrame(
+                    [
+                        {
+                            "nome_lamina": nome_lamina.upper(),
+                            "classe_predicao": "Indefinida",
+                            "data_atualizacao": datetime.now(),
+                        }
+                    ]
+                ),
+            ],
+            ignore_index=True,
+        )
+
+        df_laminas.to_csv(
+            diretorio_base + "dataset.csv", index=False
+        )  # escreve em disco
 
         pasta_existente = False
         return redirect("/classificacao.html")
@@ -313,7 +368,7 @@ def predict():
         }
 
         # Adicionando a nova linha ao DataFrame
-        df = df.append(nova_linha, ignore_index=True)
+        df = pd.concat([df, pd.DataFrame([nova_linha])], ignore_index=True)
 
     # Exibindo o DataFrame atualizado
     print(df)
@@ -330,6 +385,86 @@ def predict():
     return redirect('/classificacao.html')
 
 
+
+@app.route("/send_image")
+def send_image():
+
+    global classes, img_removidas, img_invalidas, pasta_lamina, houve_classificacao
+
+    if pasta_lamina == "":
+        return inicia_lamina()
+
+    dez_maiores = filtrar_dataframe()  # seleciona as 10 maiores predições positivas
+    num_linhas = dez_maiores.shape[0]
+
+    # Verificando a predição com base no nome da lâmina
+    lamina = pasta_lamina.split("/")[-1]
+    predicao_existente = consulta_predicao_dataset(lamina)
+
+    return render_template(
+        "send_image.html",
+        pagina="Classificação",
+        houve_classificacao=houve_classificacao,
+        lamina=lamina,
+        predicao_existente=predicao_existente,
+        dataset=dez_maiores,
+        num_linhas=num_linhas,
+        img_removidas=img_removidas,
+        img_invalidas=img_invalidas,
+    )
+
+
+@app.route("/predict-send-image", methods=["POST"])
+def predict_send_image():
+    global classes, filenames, model, img_invalidas, pasta_lamina, df, houve_classificacao
+
+    arquivos = request.files.getlist("file")
+
+    filenames = []
+    img_invalidas = 0
+    for arquivo in arquivos:
+        if arquivo and formatos_permitidos(
+            arquivo.filename
+        ):  # Verifica o formato da imagem
+            nome_arquivo = arquivo.filename
+            date_now = datetime.now().strftime("%Y%m%d%H%M%S")
+            arquivo_path = os.path.join(pasta_lamina, date_now + nome_arquivo)
+            arquivo.save(arquivo_path)
+            filenames.append(arquivo_path)
+        else:
+            img_invalidas += 1  # formato inválido
+
+
+    imagens = ler_imagem()  # Pré-processamento das imagens
+
+
+    for i, img in enumerate(imagens):
+        prediction = model.predict(img)  # Predição
+        temp = prediction
+        prediction = (prediction > 0.5).astype(np.uint8)
+        if prediction[[0]] == 1:
+            classe = "Positiva"
+            porcentagem = round(temp[0][0] * 100, 2)
+            # classe = f"Classe: Positiva ({porcentagem}%)"
+        else:
+            classe = "Negativa"
+            porcentagem = round((1 - temp[0][0]) * 100, 2)
+
+        nova_linha = {
+            "nome_imagem": filenames[i],
+            "classe_predicao": classe,
+            "porcentagem_predicao": porcentagem,
+        }
+
+        df = pd.concat([df, pd.DataFrame([nova_linha])], ignore_index=True)
+    lamina = pasta_lamina.split("/")[-1]
+    atualiza_predicao_dataset(lamina)
+
+    df.to_csv(f'{pasta_lamina + "/" + lamina}.csv', index=False)
+
+    houve_classificacao = True
+
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":
