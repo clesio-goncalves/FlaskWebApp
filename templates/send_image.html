@@ -69,6 +69,7 @@
 
 <script type="text/javascript">
     (() => {
+        changeCamera();
         // The width and height of the captured photo. We will set the
         // width to the value defined here, but the height will be
         // calculated based on the aspect ratio of the input stream.
@@ -208,6 +209,42 @@
         window.addEventListener("load", startup, false);
     })();
 
+    async function changeCamera() {
+  try {
+    // Listar todos os dispositivos de mídia disponíveis
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+    console.log(videoDevices)
+    if (videoDevices.length > 1) {
+      // Supondo que você queira mudar para a segunda câmera
+      const secondCameraId = videoDevices[3].deviceId;
+
+      // Definir as restrições para usar a segunda câmera
+      const constraints = {
+        video: {
+          deviceId: { exact: secondCameraId }
+        }
+      };
+
+      // Solicitar acesso à segunda câmera
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      // Substituir o stream de vídeo atual pelo novo
+      const video = document.getElementById('video');
+      video.srcObject = stream;
+    } else {
+      console.log("Apenas uma câmera detectada.");
+    }
+  } catch (error) {
+    console.error("Erro ao mudar a câmera:", error);
+  }
+}
+
+// Adicionar um ouvinte de evento ou chamar essa função em algum lugar apropriado
+
+
+
 </script>
 
 <script>
@@ -246,9 +283,9 @@
                   while (delimiterIndex != -1) {
                       const completeMessage = receivedData.substring(0, delimiterIndex);
                       console.log(completeMessage);
-                        // let data = new TextEncoder().encode('1');
-                        //
-                        // await writeSerial(data);
+                        let data = new TextEncoder().encode('1');
+                        document.getElementById('startbutton').click()
+                        await writeSerial(data);
 
                       receivedData = receivedData.substring(delimiterIndex + 1);
                       delimiterIndex = receivedData.indexOf('\n');
